@@ -1,8 +1,10 @@
 > WARNING - THIS IS NOT PRODUCTION CODE BUT SCIENCE FICTION!
 
-> "Aramaki never engages in direct missions, but offers a great array of diplomatic support in return."
+> "Aramaki never engages in direct missions, but offers a great array of
+   diplomatic support in return."
 >
-> [Ghost in the Shell Wiki](https://ghostintheshell.fandom.com/wiki/Daisuke_Aramaki)]
+> [Ghost in the Shell Wiki]
+  (https://ghostintheshell.fandom.com/wiki/Daisuke_Aramaki)
 
 ## Aramaki creates a timeline ...
 
