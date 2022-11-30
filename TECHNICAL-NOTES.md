@@ -112,6 +112,27 @@ https://www.w3.org/TR/json-ld
 
 * review and compare rdflib / pyld handling
 
+## Object Capabilities (security, access and permission control)
+
+Right now, access control in the Fediverse is mostly based on ACLs. This manages cases like *who can access posts* and *who can send posts to a certain user* by explicitly stating actors in an allow or deny list (usually things like the *followers* or *blocked* collection).  
+But a more fine-grained permission management is possible using *object capabilities (OCaps)*. There are ideas about how to implement this using ActivityPub, but nothing has reached production-level so far.
+
+- OCaps background:
+    - [Talk: Architectures of Robust Openness by Mark S. Miller](https://conf.tube/w/g87k3yKzYwpGhtohvQdC3k), one of the pioneers of OCap work
+    - [Proposal and introduction of BearCap URIs](https://github.com/cwebber/rwot9-prague/blob/bearcaps/topics-and-advance-readings/bearcaps.md): short proposal of the `bear:` *bearer token* URI scheme
+    - [Demystifiyng Bearer Capability URIs](https://blog.dereferenced.org/demystifying-bearer-capability-uris)
+        - bearcaps are already partially [used by Mastodon](https://docs.joinmastodon.org/spec/bearcaps/)
+- OCaps in ActivityPub:
+    - [OcapPub: Towards networks of consent by Christine Lemmer-Webber](https://gitlab.com/spritely/ocappub/blob/master/README.org): long writeup of an architecture how to integrate OCaps in ActivityPub, including an overview of what OCaps are and a motivation. Very good introduction and overview read.
+- using OCaps in ActivityPub, but with focus on moderation:
+    - [Talk: Keeping Unwanted Messages off the Fediverse by Serge Wroclawski](https://conf.tube/w/8TLrJAfKcViUYGvYPMAKT4)
+    - [A Better Moderation System is Possible by Erin Shepherd](https://blog.erinshepherd.net/2022/11/a-better-moderation-system-is-possible-for-the-social-web/)
+
+
+## Custom Vocabulary
+
+- The [Forgefed Vocabulary](https://forgefed.org/vocabulary.html) extends the ActivityStream vocabulary for usage between federated code forges (including tickets and merge requests) and can serve as an example of extending a vocabulary.
+
 
 # User Interface
 
