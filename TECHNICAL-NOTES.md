@@ -12,6 +12,12 @@
 
 * consider extracting the "meta" code into a separate package
 
+* reconsider flask vs. pyramid. specifically from a security perspective and a
+  declarative software config assembly I think I'd prefer to stick with
+  pyramid ... otoh pyramid seems dead, so better swallow that bitter-sweet pill
+  early?
+
+
 # Business
 
 * invoicing?
@@ -26,10 +32,12 @@ to also use the federation approach to help people cooperate on stuff
 * "In case of emergency" commands with offline signatures
 
 * Browser-based strong authentication with yubikeys that also provide
-  signed "session keys" that can impersonate the use for a while.
+  signed "session keys" that can impersonate the user for a given duration.
+
+  The issue here is that we can't sign the whole thing via browser crypto or AuthN. Browser crypto doesn't reach the yubikey and AuthN is designed to sign small challenges like hashes (careful with replay attacks).
 
 
-# Other Features that could be interesting for MVP mass
+# Other Features that could be interesting for MVP scope
 
 * implementing federated "announcements" (current incidents, planned maintenances)
 
@@ -66,6 +74,17 @@ to also use the federation approach to help people cooperate on stuff
 
   * a shared view of "whats currently open" to help jour fixe discussions
 
+* monthly reports are a typical thing where effort is high and impact seems low. i think there could be value in a well-maintained timeline to replace monthly reports and help augmenting regular review / "State of the union" meetings.
+
+
+# Agents
+
+* The protocol for agents doesn't necessarily have to be HTTPS. We could
+  consider using SSH here in combination with SSH certificates. The whole
+  signing dance in ActivityPub also needs review what kind of keys they are
+  using (they seem to be generating one-off RSA keypairs, not sure which
+  standard this is defined in currently).
+
 # The Vision
 
 * "the timeline"
@@ -86,6 +105,8 @@ https://www.w3.org/TR/json-ld
 
 * Consider how to structure the general model of objects and activities.
   This is a big item regarding creating a good domain model vs. data model!
+
+* what are the relationships between "things" that we need to model?
 
 * Are outboxes actually a thing or do applications generally just
 
@@ -112,9 +133,12 @@ https://www.w3.org/TR/json-ld
 
 * review and compare rdflib / pyld handling
 
+* internal vs. external representation of objects/activites: state versus
+  history/log. this seems to require review of event sourcing systems/architectures.
+
 ## Object Capabilities (security, access and permission control)
 
-Right now, access control in the Fediverse is mostly based on ACLs. This manages cases like *who can access posts* and *who can send posts to a certain user* by explicitly stating actors in an allow or deny list (usually things like the *followers* or *blocked* collection).  
+Right now, access control in the Fediverse is mostly based on ACLs. This manages cases like *who can access posts* and *who can send posts to a certain user* by explicitly stating actors in an allow or deny list (usually things like the *followers* or *blocked* collection).
 But a more fine-grained permission management is possible using *object capabilities (OCaps)*. There are ideas about how to implement this using ActivityPub, but nothing has reached production-level so far.
 
 - OCaps background:
