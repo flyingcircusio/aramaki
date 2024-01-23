@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "aramaki"
+version = "0.0.1"
+authors = [
+  { name="Christian Theune", email="ct@flyingcircus.io" },
+]
+description = "A federated DevOps control-plane."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "psycopg2",
+  "websockets",
+  "pyramid"
+]
+
+[project.urls]
+Homepage = "https://github.com/flyingcircusio/aramaki"
+Issues = "https://github.com/flyingcircusio/aramaki/issues"
+
+[project.scripts]
+aramaki-server = "aramaki.server.main:main"
+aramaki-agent = "aramaki.agent.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aramaki"]
+
+
+[tool.black]
+line-length = 79
+

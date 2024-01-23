@@ -1,0 +1,8 @@
+
+
+# Housekeeping
+
+* [ ] github actions / ci integration 
+* [ ] pre-commit
+* [ ] review attrs pyproject.toml
+* [ ] AGPL - provide source link and license notice in the UI
