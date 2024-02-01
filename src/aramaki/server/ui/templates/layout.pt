@@ -1,0 +1,67 @@
+<!DOCTYPE html metal:define-macro="layout">
+<html lang="${request.locale_name}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Aramaki</title>
+
+    <!-- Custom styles for this scaffold -->
+    <link href="${request.static_url('aramaki.server.ui:static/aramaki.css')}" rel="stylesheet">
+
+    <script src="${request.static_url('aramaki.server.ui:static/htmx.min.js')}" defer></script>
+    <script src="${request.static_url('aramaki.server.ui:static/hyperscript.min.js')}" defer></script>
+
+  </head>
+
+  <body class="bg-fc-blue-gray-200">
+
+    <nav class="bg-fc-green px-6 py-3 shadow-lg text-slate-50 print:hidden">
+      <a href="#">Asdfg</a> |
+      <a href="#">Bsdf</a> |
+      <a href="#">Csdf</a>
+    </nav>
+
+    <div class="fixed h-screen w-72 bg-fc-midnight pt-4 text-white">
+      
+      <h2 class="bg-fc-midnight-500 p-4">Infrastruktur</h2>
+
+      <ul class="p-4">
+        <li>RZOB</li>
+        <li>WHQ</li>
+        <li>DEV</li>
+        <li>Network</li>
+        <li>Storage</li>
+        <li>Compute</li>
+      </ul>
+
+      <h2 class="bg-fc-midnight-500 p-4">Kunden</h2>
+
+      <ul class="p-4">
+        <li>Deutscher Ärzteverlag GmbH</li>
+        <li>DLGI mbH</li>
+        <li>Mayer Software</li>
+        <li>Phaina GmbH</li>
+        <li>riscLOG Solution GmbH</li>
+        <li>Star Alliance</li>
+      </ul>
+
+      <h2 class="bg-fc-midnight-500 p-4">Services</h2>
+
+      <ul class="p-4">
+        <li>Directory</li>
+        <li>Gitlab</li>
+        <li>Mastodon</li>
+        <li>Matrix</li>
+        <li>Nextcloud</li>
+        <li>Wiki</li>
+        <li>Youtrack</li>
+      </ul>
+
+    </div>
+
+    <div metal:define-slot="content">No content</div>
+  
+  </body>
+</html>

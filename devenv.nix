@@ -7,28 +7,29 @@
     pkgs.git
     pkgs.postgresql_15
     pkgs.python311Packages.psycopg2
+    pkgs.tailwindcss
   ];
-
-  enterShell = ''
-    pip install -e ./
-  '';
 
   languages.python = {
     enable  = true;
     package = pkgs.python311Full;
-    venv = { 
+    poetry = {
       enable = true;
-      quiet = true;
+      install = {
+         enable = true;
+         installRootPackage = true;
+      };
     };
   };
 
   processes = {
-    aramaki-server-ui.exec = "aramaki-server ui";
-    aramaki-server-processing.exec = "aramaki-server processing";
-    aramaki-server-federation.exec = "aramaki-server federation";
-    aramaki-server-agent-manager.exec = "aramaki-server agent-manager";
-  
-    aramaki-agent.exec = "aramaki-agent";
+    aramaki-server-ui.exec = "pserve development.ini";
+    #aramaki-server-processing.exec = "aramaki-server processing";
+    #aramaki-server-federation.exec = "aramaki-server federation";
+    #aramaki-server-agent-manager.exec = "aramaki-server agent-manager";
+    #    aramaki-agent.exec = "aramaki-agent";
+
+    tailwindcss.exec = "cd tailwind; (while true; do sleep 10; done) | tailwindcss -i aramaki.css -o ../src/aramaki/server/ui/static/aramaki.css --minify --watch";
   };
 
   services.postgres = {
@@ -46,8 +47,4 @@
     ruff.enable = true;
   };
 
-  # https://devenv.sh/processes/
-  # processes.ping.exec = "ping example.com";
-
-  # See full reference at https://devenv.sh/reference/options/
 }

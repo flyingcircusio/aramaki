@@ -1,17 +1,20 @@
-from wsgiref.simple_server import make_server
+import logging
 
 from pyramid.config import Configurator
-from pyramid.response import Response
 
 
-def hello_world(request):
-    return Response("Hello World!")
+def main(global_config, **settings):
+    """This function returns a Pyramid WSGI application."""
 
+    logging.basicConfig()  # you need to initialize logging, otherwise you will not see anything from requests
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
 
-def main():
-    with Configurator() as config:
-        config.add_route("hello", "/")
-        config.add_view(hello_world, route_name="hello")
-        app = config.make_wsgi_app()
-    server = make_server("0.0.0.0", 6543, app)
-    server.serve_forever()
+    with Configurator(settings=settings) as config:
+        config.include("pyramid_chameleon")
+        config.include(".routes")
+        config.scan()
+
+    return config.make_wsgi_app()
