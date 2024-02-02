@@ -8,19 +8,17 @@
     <title>Aramaki</title>
 
     <!-- Custom styles for this scaffold -->
-    <link href="${request.static_url('aramaki.server.ui:static/aramaki.css')}" rel="stylesheet">
+    <link href="${request.static_url('aramaki.server.web:static/aramaki.css')}" rel="stylesheet">
 
-    <script src="${request.static_url('aramaki.server.ui:static/htmx.min.js')}" defer></script>
-    <script src="${request.static_url('aramaki.server.ui:static/hyperscript.min.js')}" defer></script>
+    <script src="${request.static_url('aramaki.server.web:static/htmx.min.js')}" defer></script>
+    <script src="${request.static_url('aramaki.server.web:static/hyperscript.min.js')}" defer></script>
 
   </head>
 
   <body class="bg-fc-blue-gray-200">
 
     <nav class="bg-fc-green px-6 py-3 shadow-lg text-slate-50 print:hidden">
-      <a href="#">Asdfg</a> |
-      <a href="#">Bsdf</a> |
-      <a href="#">Csdf</a>
+      Aramaki
     </nav>
 
     <div class="fixed h-screen w-72 bg-fc-midnight pt-4 text-white">
