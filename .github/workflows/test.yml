@@ -16,9 +16,13 @@ jobs:
     - uses: cachix/install-nix-action@v25
     - uses: cachix/cachix-action@v14
       with:
-        name: devenv
+        name: flyingcircusio
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Install devenv.sh
       run: nix profile install tarball+https://install.devenv.sh/latest
 
     - name: Build the devenv shell and run any pre-commit hooks
       run: devenv ci
+
+    - name: Run pytest
+      run: devenv shell pytest
