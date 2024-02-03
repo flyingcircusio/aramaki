@@ -1,25 +1,24 @@
 import uuid
 
-from sqlalchemy import Column, String, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import func
+from sqlalchemy.orm import Mapped, mapped_column
 
-from .meta import Base
+from . import meta
 
 
-class System(Base):
+class System(meta.Base):
     __tablename__ = "system"
 
-    id = Column(
-        UUID(as_uuid=True),
+    id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
         server_default=func.gen_random_uuid(),
     )
 
-    title = Column(String, nullable=False)
+    title: Mapped[str]
 
-    # Make this a dictionary.
-    type_ = Column(String, nullable=False)
+    # Make this a dictionary, use references
+    type_: Mapped[str]
 
     # XXX Turn into relationship
-    primary_instance = Column(UUID(as_uuid=True))
+    primary_instance: Mapped[uuid.UUID]

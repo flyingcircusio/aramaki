@@ -1,0 +1,26 @@
+from _typeshed import Incomplete
+from collections.abc import Generator
+
+__all__ = ['FileApp', 'DirectoryApp']
+
+class FileApp:
+    filename: Incomplete
+    kw: Incomplete
+    def __init__(self, filename, **kw) -> None: ...
+    def __call__(self, req): ...
+
+class FileIter:
+    file: Incomplete
+    def __init__(self, file) -> None: ...
+    def app_iter_range(self, seek: Incomplete | None = None, limit: Incomplete | None = None, block_size: Incomplete | None = None) -> Generator[Incomplete, None, None]: ...
+    __iter__ = app_iter_range
+
+class DirectoryApp:
+    path: Incomplete
+    index_page: Incomplete
+    hide_index_with_redirect: Incomplete
+    fileapp_kw: Incomplete
+    def __init__(self, path, index_page: str = 'index.html', hide_index_with_redirect: bool = False, **kw) -> None: ...
+    def make_fileapp(self, path): ...
+    def __call__(self, req): ...
+    def index(self, req, path): ...

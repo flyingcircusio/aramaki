@@ -47,6 +47,7 @@ pytest = ">=7.4"
 pytest-cov = ">=4.1"
 pytest-cache = ">=1.0"
 pytest-timeout = ">=2.2"
+pytest-mypy = ">=0.10"
 
 [tool.poetry.plugins."paste.app_factory"]
 main = "aramaki.server.web.main:main"
@@ -62,3 +63,20 @@ Issues = "https://github.com/flyingcircusio/aramaki/issues"
 
 [tool.black]
 line-length = 79
+
+
+[[tool.mypy.overrides]]
+module = "webob.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "zope.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pkg_resources.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pyramid.*"
+ignore_errors = true

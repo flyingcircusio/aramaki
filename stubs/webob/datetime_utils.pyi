@@ -1,0 +1,26 @@
+from _typeshed import Incomplete
+from datetime import tzinfo
+
+__all__ = ['UTC', 'timedelta_to_seconds', 'year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'parse_date', 'serialize_date', 'parse_date_delta', 'serialize_date_delta']
+
+class _UTC(tzinfo):
+    def dst(self, dt): ...
+    def utcoffset(self, dt): ...
+    def tzname(self, dt): ...
+
+UTC: Incomplete
+
+def timedelta_to_seconds(td): ...
+
+day: Incomplete
+week: Incomplete
+hour: Incomplete
+minute: Incomplete
+second: Incomplete
+month: Incomplete
+year: Incomplete
+
+def parse_date(value): ...
+def serialize_date(dt): ...
+def parse_date_delta(value): ...
+def serialize_date_delta(value): ...

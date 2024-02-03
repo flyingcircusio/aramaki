@@ -4,6 +4,7 @@
   env.PYTHONUNBUFFERED = "true";
   env.ALEMBIC_CONFIG = "development.ini";
   env.PGDATABASE = "aramaki";
+  env.MYPYPATH="stubs";
 
   packages = [
     pkgs.git

@@ -4,7 +4,8 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(
         prog="aramaki-server",
-        description="Server implementation of Aramaki, the federated DevOps control plane.",
+        description="Server implementation of Aramaki, the federated DevOps "
+        "control plane.",
         epilog="Text at the bottom of help",
     )
 
@@ -12,7 +13,7 @@ def main():
 
     args = parser.parse_args()
     if args.subsystem == "ui":
-        from .ui.main import main as real_main
+        from .web.main import main as real_main
     elif args.subsystem == "processing":
         from .processing.main import main as real_main
     elif args.subsystem == "federation":

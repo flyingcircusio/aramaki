@@ -1,4 +1,4 @@
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.schema import MetaData
 
 # Recommended naming convention used by Alembic, as various different database
@@ -13,4 +13,7 @@ NAMING_CONVENTION = {
 }
 
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
-Base = declarative_base(metadata=metadata)
+
+
+class Base(DeclarativeBase):
+    metadata = metadata
