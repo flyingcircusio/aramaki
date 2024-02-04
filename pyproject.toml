@@ -70,6 +70,10 @@ line_length = 79
 
 
 [[tool.mypy.overrides]]
+module = "aramaki.*"
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
 module = "webob.*"
 ignore_errors = true
 
