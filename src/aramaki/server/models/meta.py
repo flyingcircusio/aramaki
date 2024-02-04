@@ -1,4 +1,12 @@
-from sqlalchemy.orm import DeclarativeBase
+import uuid
+
+from sqlalchemy import func
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    mapped_column,
+)
 from sqlalchemy.schema import MetaData
 
 # Recommended naming convention used by Alembic, as various different database
@@ -15,5 +23,16 @@ NAMING_CONVENTION = {
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
-class Base(DeclarativeBase):
+class Base(MappedAsDataclass, DeclarativeBase):
     metadata = metadata
+
+
+class UIDBase(Base):
+    __abstract__ = True
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        init=False,
+        primary_key=True,
+        default_factory=uuid.uuid4,
+        server_default=func.gen_random_uuid(),
+    )
