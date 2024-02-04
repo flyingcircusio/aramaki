@@ -12,9 +12,7 @@ def main():
     parser.add_argument("subsystem")
 
     args = parser.parse_args()
-    if args.subsystem == "ui":
-        from .web.main import main as real_main
-    elif args.subsystem == "processing":
+    if args.subsystem == "processing":
         from .processing.main import main as real_main
     elif args.subsystem == "federation":
         from .federation.main import main as real_main
