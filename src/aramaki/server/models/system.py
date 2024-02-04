@@ -3,6 +3,8 @@ import uuid
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from aramaki.server.models.instance import Instance
+
 from . import meta
 
 subsystem = Table(
@@ -61,7 +63,10 @@ class System(meta.UIDBase):
     )
     category: Mapped[SystemCategory] = relationship(SystemCategory)
 
-    primary_instance: Mapped[uuid.UUID]
+    primary_instance_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("instance.id"), init=False
+    )
+    primary_instance: Mapped[Instance] = relationship(Instance)
 
     title: Mapped[str]
 
