@@ -49,6 +49,7 @@ pytest-cache = ">=1.0"
 pytest-timeout = ">=2.2"
 pytest-mypy = ">=0.10"
 pytest-patterns = ">=0.1"
+"zope.testbrowser" = ">=6.0"
 
 [tool.poetry.plugins."paste.app_factory"]
 main = "aramaki.server.web.main:main"
@@ -97,3 +98,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "webtest.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pyramid.testing.*"
+ignore_missing_imports = true

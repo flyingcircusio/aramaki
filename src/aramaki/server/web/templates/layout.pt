@@ -25,7 +25,7 @@
     </nav>
 
     <div class="fixed h-screen w-72 bg-fc-midnight pt-4 text-white">
-      
+
       <div tal:repeat="category request.api.navigation()">
         <h2 class="bg-fc-midnight-500 p-4">${category.title}</h2>
 

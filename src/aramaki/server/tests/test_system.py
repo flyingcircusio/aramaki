@@ -1,6 +1,7 @@
 import uuid
 
 import pytest_patterns.plugin
+import transaction
 
 from aramaki.server.models.system import Instance, System, SystemCategory
 
@@ -44,7 +45,7 @@ def test_system_basic():
 
 
 def test_system_overview(
-    testapp, dbsession, patterns: pytest_patterns.plugin.PatternsLib
+    testbrowser, dbsession, patterns: pytest_patterns.plugin.PatternsLib
 ):
     instance = Instance()
     infrastructure = SystemCategory("Infrastructure")
@@ -97,9 +98,18 @@ def test_system_overview(
 
     dbsession.flush()
 
-    res = testapp.get("/", status=200)
+    transaction.commit()
+
+    testbrowser.open("http://example.com/")
 
     owrap = patterns.owrap
+    owrap.optional("<empty-line>")
+    owrap.optional("    ")
+    owrap.optional("  ")
+    owrap.optional("    <meta ...>")
+    owrap.optional("    <script ...>")
+    owrap.optional("    <link ...>")
+    owrap.optional("    <!-- ...")
     owrap.in_order(
         """
 <!DOCTYPE html>
@@ -108,6 +118,9 @@ def test_system_overview(
     <title>Aramaki</title>
   </head>
   <body ...>
+    <nav ...>
+      Aramaki
+    </nav>
     <div ...>
     </div>
   </body>
@@ -123,20 +136,21 @@ def test_system_overview(
         <h2 ...>Infrastructure</h2>
 
         <ul ...>
-         <li>First data center</li>
+          <li>First data center</li>
           <li>Second data center</li>
         </ul>
       </div>
+      <div>
         <h2 ...>Project</h2>
-<empty-line>
+
         <ul ...>
           <li>First project</li>
           <li>Second project</li>
         </ul>
       </div>
       <div>
-        <h2 ...>Services</h2>
-<empty-line>
+        <h2 ...>Service</h2>
+
         <ul ...>
           <li>First service</li>
           <li>Second service</li>
@@ -145,4 +159,4 @@ def test_system_overview(
 """
     )
 
-    assert dashboard == res.ubody
+    assert dashboard == testbrowser.contents
