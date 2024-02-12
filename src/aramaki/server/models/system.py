@@ -22,6 +22,19 @@ class SystemCategory(meta.UIDBase):
 
     title: Mapped[str]
 
+    systems: Mapped[list["System"]] = relationship(
+        default_factory=list, back_populates="category"
+    )
+
+    def anchor_systems(self):
+        """Yield all systems that are not included as sub-systems in other
+        systems.
+
+        TODO See ARAMAKI-105 about manually anchoring systems.
+
+        """
+        return [system for system in self.systems if not system.supersystems]
+
 
 class System(meta.UIDBase):
     """Systems are the main unit of granularity in Aramaki.
@@ -61,7 +74,9 @@ class System(meta.UIDBase):
     category_id: Mapped[int] = mapped_column(
         ForeignKey("system_category.id"), init=False
     )
-    category: Mapped[SystemCategory] = relationship(SystemCategory)
+    category: Mapped[SystemCategory] = relationship(
+        SystemCategory, back_populates="systems"
+    )
 
     primary_instance_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("instance.id"), init=False
@@ -89,4 +104,13 @@ class System(meta.UIDBase):
         primaryjoin="system.c.id == subsystem.c.system_id",
         secondaryjoin="system.c.id == subsystem.c.subsystem_id",
         default_factory=list,
+        back_populates="supersystems",
+    )
+
+    supersystems: Mapped[list["System"]] = relationship(
+        secondary=subsystem,
+        primaryjoin="system.c.id == subsystem.c.subsystem_id",
+        secondaryjoin="system.c.id == subsystem.c.system_id",
+        default_factory=list,
+        back_populates="subsystems",
     )

@@ -1,12 +1,3 @@
-<!DOCTYPE html>
 <div metal:use-macro="load: layout.pt">
-
-  <metal:block fill-slot="header-after">
-      <title>Aramaki - Dashboard</title>
-  </metal:block>
-
-  <div metal:fill-slot="content" class="px-8 py-4 text-xl">
-  Foo!
-  </div>
 
 </div>

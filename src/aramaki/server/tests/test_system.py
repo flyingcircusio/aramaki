@@ -1,5 +1,7 @@
 import uuid
 
+import pytest_patterns.plugin
+
 from aramaki.server.models.system import Instance, System, SystemCategory
 
 
@@ -31,3 +33,116 @@ def test_system_basic():
     system.subsystems.append(subsystem)
 
     assert system.subsystems == [subsystem]
+
+    assert len(infrastructure.systems) == 2
+    assert subsystem in infrastructure.systems
+    assert system in infrastructure.systems
+
+    anchors = infrastructure.anchor_systems()
+    assert len(anchors) == 1
+    assert anchors[0] is system
+
+
+def test_system_overview(
+    testapp, dbsession, patterns: pytest_patterns.plugin.PatternsLib
+):
+    instance = Instance()
+    infrastructure = SystemCategory("Infrastructure")
+
+    dc1 = System(
+        title="First data center",
+        primary_instance=instance,
+        category=infrastructure,
+    )
+    dbsession.add(dc1)
+
+    dc2 = System(
+        title="Second data center",
+        primary_instance=instance,
+        category=infrastructure,
+    )
+    dbsession.add(dc2)
+
+    project = SystemCategory("Project")
+    dbsession.add(project)
+
+    p1 = System(
+        title="First project",
+        primary_instance=instance,
+        category=project,
+    )
+    dbsession.add(p1)
+    p2 = System(
+        title="Second project",
+        primary_instance=instance,
+        category=project,
+    )
+    dbsession.add(p2)
+
+    service = SystemCategory("Service")
+    dbsession.add(service)
+
+    s1 = System(
+        title="First service",
+        primary_instance=instance,
+        category=service,
+    )
+    dbsession.add(s1)
+    s2 = System(
+        title="Second service",
+        primary_instance=instance,
+        category=service,
+    )
+    dbsession.add(s2)
+
+    dbsession.flush()
+
+    res = testapp.get("/", status=200)
+
+    owrap = patterns.owrap
+    owrap.in_order(
+        """
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Aramaki</title>
+  </head>
+  <body ...>
+    <div ...>
+    </div>
+  </body>
+</html>
+"""
+    )
+
+    dashboard = patterns.dashboard
+    dashboard.merge("owrap")
+    dashboard.continuous(
+        """
+      <div>
+        <h2 ...>Infrastructure</h2>
+
+        <ul ...>
+         <li>First data center</li>
+          <li>Second data center</li>
+        </ul>
+      </div>
+        <h2 ...>Project</h2>
+<empty-line>
+        <ul ...>
+          <li>First project</li>
+          <li>Second project</li>
+        </ul>
+      </div>
+      <div>
+        <h2 ...>Services</h2>
+<empty-line>
+        <ul ...>
+          <li>First service</li>
+          <li>Second service</li>
+        </ul>
+      </div>
+"""
+    )
+
+    assert dashboard == res.ubody

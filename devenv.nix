@@ -60,7 +60,10 @@
   services.postgres = {
     enable = true;
     package = pkgs.postgresql_15;
-    initialDatabases = [{ name = "aramaki"; }];
+    initialDatabases = [
+      { name = "aramaki"; }
+      { name = "testing"; }
+    ];
   };
 
   services.redis.enable = true;
