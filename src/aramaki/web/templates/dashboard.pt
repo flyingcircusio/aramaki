@@ -1,0 +1,13 @@
+<div metal:use-macro="load: layout.pt">
+
+
+<div metal:fill-slot="content">
+	<table>
+		<tr tal:repeat="obs observations">
+			<td>${obs.system.title}</td>
+			<td>${obs.data}</td>
+		</tr>
+	</table>
+</div>
+
+</div>

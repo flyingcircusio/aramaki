@@ -39,7 +39,10 @@ zope-sqlalchemy = "^3.0"
 
 # peppercorn = "^0.6"
 peppercorn  = {git = "https://github.com/ctheune/peppercorn.git", branch = "htmx-workaround-1686-wrong-form-dataset-construction" }
-
+aiofiles = "^23.2.1"
+fswatch = "^0.1.1"
+zstd = "^1.5.5.1"
+redis = "^5.0.1"
 
 [tool.poetry.group.dev.dependencies]
 webtest = ">=3"
@@ -52,12 +55,10 @@ pytest-patterns = ">=0.1"
 "zope.testbrowser" = ">=6.0"
 
 [tool.poetry.plugins."paste.app_factory"]
-main = "aramaki.server.web.main:main"
+main = "aramaki.web.main:main"
 
 [tool.poetry.plugins."console_scripts"]
-aramaki-initialize-db = "aramaki.scripts.initialize_db:main"
-aramaki-server = "aramaki.server.main:main"
-aramaki-agent = "aramaki.agent.main:main"
+aramaki = "aramaki.scripts:main"
 
 [project.urls]
 Homepage = "https://github.com/flyingcircusio/aramaki"
@@ -69,7 +70,6 @@ line-length = 79
 [tool.isort]
 profile = "black"
 line_length = 79
-
 
 [[tool.mypy.overrides]]
 module = "aramaki.*"

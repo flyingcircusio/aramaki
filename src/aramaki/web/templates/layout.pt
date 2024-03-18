@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="${request.locale_name}"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:define-macro="layout">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Aramaki</title>
+
+    <!-- Custom styles for this scaffold -->
+    <link href="${request.static_url('aramaki.server.web:static/aramaki.css')}" rel="stylesheet">
+
+    <script src="${request.static_url('aramaki.server.web:static/htmx.js')}" defer></script>
+    <script src="${request.static_url('aramaki.server.web:static/hyperscript.js')}" defer></script>
+
+  </head>
+
+  <body class="bg-fc-blue-gray-200">
+
+    <nav class="bg-fc-green px-6 py-3 shadow-lg text-slate-50 print:hidden">
+      Aramaki
+    </nav>
+
+    <div class="flex">
+      <div class="h-screen sticky w-72 bg-fc-midnight pt-4 text-white">
+
+        <div tal:repeat="category request.api.navigation()">
+          <h2 class="bg-fc-midnight-500 p-4">${category.title}</h2>
+
+          <ul class="p-4">
+            <li tal:repeat="system category.systems">${system.title}</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div metal:define-slot="content" tal:omit-tag="True"></div>
+    </div>
+  
+  </body>
+</html>

@@ -1,3 +1,0 @@
-<div metal:use-macro="load: layout.pt">
-
-</div>

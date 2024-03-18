@@ -33,12 +33,8 @@
     alembic upgrade head
   '';
 
-  scripts.aramaki-web.exec = ''
-    pserve development.ini
-  '';
-
   enterShell = ''
-        echo
+      echo
       echo 🦾 Helper scripts you can run to make your development richer:
       echo 🦾
       ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|🦾 |' -e 's|••| |g'
@@ -47,14 +43,15 @@
       echo
   '';
 
-  processes = {
-    # aramaki-server-web.exec = "pserve development.ini";
-    # aramaki-server-processing.exec = "aramaki-server processing";
-    # aramaki-server-federation.exec = "aramaki-server federation";
-    # aramaki-server-agent-manager.exec = "aramaki-server agent-manager";
-    # aramaki-agent.exec = "aramaki-agent";
+  process-managers.overmind.enable = true;
+  process-managers.honcho.enable = false;
 
+  processes = {
+    aramaki-web.exec = "aramaki web development.ini --reload";
+    aramaki-processing.exec = "aramaki processing development.ini";
+    aramaki-federation.exec = "aramaki federation development.ini";
     tailwindcss.exec = "cd tailwind; (while true; do sleep 10; done) | tailwindcss -i aramaki.css -o ../src/aramaki/server/web/static/aramaki.css --minify --watch";
+    agent-forward.exec = "ssh -R 8764:localhost:8764 test38.fcio.net";
   };
 
   services.postgres = {
