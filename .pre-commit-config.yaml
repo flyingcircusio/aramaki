@@ -1,0 +1,46 @@
+exclude: ^secrets/|^appenv$
+repos:
+  - hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+      - exclude: "(?x)^(\n  secrets/|environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: trailing-whitespace
+      - exclude: "(?x)^(\n  environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: end-of-file-fixer
+      - exclude: "(?x)^(\n  environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: check-yaml
+      - exclude: "(?x)^(\n  environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: check-json
+      - exclude: "(?x)^(\n  environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: check-xml
+      - exclude: "(?x)^(\n  environments/.*/secret.*|\n  .*\\.patch\n)$\n"
+        id: check-toml
+    repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+  - hooks:
+      - args:
+          - --ignore
+          - E501
+          - --ignore
+          - F401
+          - "--fix"
+        id: ruff-check
+      - id: ruff-format
+    repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+  - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+    rev: 1.40.1 # or whatever the latest version is at the time
+    hooks:
+      - id: basedpyright
+      - id: basedpyright
+        alias: basedpyright-baseline
+        name: "basedpyright (rewrite baseline)"
+        args:
+          - "--writebaseline"
+        pass_filenames: False
+        stages:
+          - manual
+  - repo: https://github.com/google/keep-sorted
+    rev: v0.9.1
+    hooks:
+      - id: keep-sorted

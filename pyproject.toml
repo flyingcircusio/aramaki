@@ -1,0 +1,41 @@
+[project]
+name = "aramaki"
+version = "0.1.0"
+readme = "README.md"
+authors = [
+    { name = "Christian Theune", email = "ct@flyingcircus.io" },
+    { name = "Leona Maroni", email = "lm@flyingcircus.io" },
+    { name = "Flying Circus Internet Operations GmbH", email = "mail@flyingcircus.io" },
+]
+requires-python = ">=3.13"
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.20.0",
+    "greenlet>=3.5.6",
+    "pydantic>=2.14.1",
+    "rfc8785>=0.1.4",
+    "sqlalchemy==2.0.43",
+    "structlog>=26.1.0",
+    "websockets>=17.2",
+]
+
+[project.scripts]
+aramaki = "aramaki:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.pytest]
+asyncio_mode = "auto"
+addopts = ["--timeout=60"]
+consider_namespace_packages = true
+testpaths = [ "src" ]
+
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-timeout>=2.4.0"
+]
