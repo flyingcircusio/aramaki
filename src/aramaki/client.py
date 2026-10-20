@@ -21,7 +21,7 @@ from websockets.exceptions import WebSocketException
 
 from aramaki import utils
 from aramaki.collection import Collection, ReplicationManager
-from aramaki.db import SqliteDBSessionManager
+from aramaki.db import SqliteDBSessionManager, DBSessionManager
 
 log = structlog.stdlib.get_logger()
 
@@ -83,7 +83,6 @@ class Client:
         application: str,
         url: str,
         secret: str,
-        state_directory: Path,
     ):
         self.websocket: ClientConnection | None = None
         self.known_messages = MessageReplaySet()
@@ -91,7 +90,6 @@ class Client:
         self.application = application
         self.url = url
         self.secret = secret
-        self.state_directory = state_directory
 
         self.subscriptions = {}
         self.callbacks = {}
@@ -99,12 +97,6 @@ class Client:
         self.websocket_ready = asyncio.Event()
 
         self.collections = {}
-
-        if not self.state_directory.exists():
-            self.state_directory.mkdir()
-        self.db = SqliteDBSessionManager(state_directory)
-        # This is blocking on purpose, to ensure we have a clean DB when everything starts up.
-        self.db.upgrade()
 
     def register_message_handler(
         self,
@@ -234,7 +226,7 @@ class Client:
         )
 
     def prepare_message(self, message: dict[str, Any]) -> str:
-        now = datetime.datetime.now().astimezone(datetime.UTC)
+        now = utils.now()
         id_ = uuid.uuid4().hex
         log.debug("prepare-message", type=message.get("@type"), id=id_)
         message_template = {
@@ -260,3 +252,18 @@ class Client:
         assert self.websocket is not None
         await self.websocket.send(prepared_message)
         log.debug("sending-message", status="sent", type=type)
+
+class ClientWithState(Client):
+    def __init__(
+        self,
+        principal: str,
+        application: str,
+        url: str,
+        secret: str,
+        db_session_manager: DBSessionManager
+    ):
+        super().__init__(principal=principal, application=application, url=url, secret=secret)
+        self.db = db_session_manager
+    
+    
+

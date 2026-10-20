@@ -1,3 +1,4 @@
+from aramaki.db import DBSessionManager, SqliteDBSessionManager
 import asyncio
 import datetime
 import json
@@ -15,7 +16,7 @@ from aramaki.client import (
     Client,
     InvalidSignatureError,
     MessageReplaySet,
-    MessageTooOldError,
+    MessageTooOldError, ClientWithState,
 )
 from aramaki.typing import JSONObject
 
@@ -113,8 +114,8 @@ def test_message_replay_set_expire_only_outdated(
         set.check("bsdf")
 
 
-async def test_client_authenticate(now: unittest.mock.Mock, tmp_path: Path):
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+async def test_client_authenticate(now: unittest.mock.Mock):
+    client = Client("host1", "app", "dummy", "asdf")
 
     # Start assembling a message until we pass it. This needs
     # 1. A proper principal
@@ -157,23 +158,23 @@ async def test_client_authenticate(now: unittest.mock.Mock, tmp_path: Path):
     }
 
 
-async def test_client_stop_start(tmp_path: Path):
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+async def test_client_stop_start():
+    client = Client("host1", "app", "dummy", "asdf")
     client.start()
     client.stop()
 
 
-async def test_client_creates_new_dir(tmp_path: Path):
-    dir = tmp_path / "new"
-    assert not dir.exists()
-    Client("host1", "app", "dummy", "asdf", dir)
-    assert dir.exists()
+async def test_client_with_state_stop_start(tmp_path: Path):
+    db_session_manager = SqliteDBSessionManager(tmp_path)
+    client = ClientWithState("host1", "app", "dummy", "asdf", db_session_manager)
+    client.start()
+    client.stop()
 
 
 async def test_client_prepare_message(
-    now: unittest.mock.Mock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
 ):
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+    client = Client("host1", "app", "dummy", "asdf")
 
     m_uuid = unittest.mock.Mock()
     m_uuid().hex = "64473ce93de046988f93a3feb6e11914"
@@ -198,9 +199,9 @@ async def test_client_prepare_message(
 
 
 async def test_client_process_message(
-    now: unittest.mock.Mock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
 ):
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+    client = Client("host1", "app", "dummy", "asdf")
 
     seen_messages: list[JSONObject] = []
 
@@ -246,9 +247,9 @@ async def test_client_process_message(
 
 
 async def test_client_process_with_missing_or_unknown_type_ignored(
-    now: unittest.mock.Mock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
 ):
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+    client = Client("host1", "app", "dummy", "asdf")
 
     message: JSONObject = {
         "key": "value",
@@ -313,7 +314,7 @@ async def test_client_run_loop(
     m_uuid().hex = "64473ce93de046988f93a3feb6e11914"
     monkeypatch.setattr(uuid, "uuid4", m_uuid)
 
-    client = Client("host1", "app", "dummy", "asdf", tmp_path)
+    client = Client("host1", "app", "dummy", "asdf")
     client.start()
 
     seen_messages: list[JSONObject] = []

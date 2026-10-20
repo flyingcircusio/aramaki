@@ -41,6 +41,8 @@ class SqliteDBSessionManager(DBSessionManager):
 
     def __init__(self, state_directory: Path):
         self.state_directory = state_directory
+        if not self.state_directory.exists():
+            self.state_directory.mkdir()
         db_url = f"sqlite+aiosqlite:///{self.state_directory!s}/aramaki.sqlite3"
         self._engine = create_async_engine(db_url)
         self._sessionmaker = async_sessionmaker(
