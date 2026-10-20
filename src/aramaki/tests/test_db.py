@@ -48,9 +48,9 @@ async def test_session_manager_context_manager(tmp_path: Path):
         async with manager.session():
             pass
 
+
 async def test_sqlite_db_session_manager_creates_new_dir(tmp_path: Path):
     dir = tmp_path / "new"
     assert not dir.exists()
     SqliteDBSessionManager(dir)
     assert dir.exists()
-

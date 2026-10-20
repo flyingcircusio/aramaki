@@ -21,7 +21,13 @@ from websockets.exceptions import WebSocketException
 
 from aramaki import utils
 from aramaki.collection import Collection, ReplicationManager
-from aramaki.db import SqliteDBSessionManager, DBSessionManager
+from aramaki.db import DBSessionManager, SqliteDBSessionManager
+from aramaki.message import (
+    Message,
+    SubscriptionMatch,
+    SubscriptionMessage,
+    message_adapter,
+)
 
 log = structlog.stdlib.get_logger()
 
@@ -59,22 +65,10 @@ class MessageReplaySet:
         self.last_expire = time.time()
 
 
-class MessageAuthenticationError(Exception):
-    pass
-
-
-class MessageTooOldError(MessageAuthenticationError):
-    pass
-
-
-class InvalidSignatureError(MessageAuthenticationError):
-    pass
-
-
 class Client:
     collections: dict[type[Collection], ReplicationManager]
     subscriptions: dict[str, dict[str, str]]
-    callbacks: dict[str, Callable[[dict[str, Any]], Awaitable[Any]]]
+    callbacks: dict[str, Callable[[Message], Awaitable[Any]]]
     tasks: set[asyncio.Task[Any]]
 
     def __init__(
@@ -101,7 +95,7 @@ class Client:
     def register_message_handler(
         self,
         type_: str,
-        callback: Callable[[dict[str, Any]], Awaitable[Any]],
+        callback: Callable[[Message], Awaitable[Any]],
         **scope: str,
     ) -> None:
         self.subscriptions[type_] = scope
@@ -125,18 +119,16 @@ class Client:
                     connection_errors = 0
                     self.websocket = websocket
                     log.info("directory-connection", status="connected")
-                    subscription = {
-                        "@type": "aramaki.subscription",
-                        "@application": self.application,
-                        "matches": [
-                            {
-                                "@type": type_,
-                                "scope": scope,
-                            }
+                    subscription = SubscriptionMessage(
+                        application=self.application,
+                        principal=self.principal,
+                        matches=[
+                            SubscriptionMatch(type=type_, scope=scope)
                             for type_, scope in self.subscriptions.items()
                         ],
-                    }
-                    await websocket.send(self.prepare_message(subscription))
+                    )
+                    self.sign_message(subscription)
+                    await websocket.send(subscription.model_dump_json())
                     log.info("subscriptions", status="sent")
                     self.websocket_ready.set()
 
@@ -171,87 +163,44 @@ class Client:
 
     async def process(self, message: str) -> None:
         try:
-            parsed_message: dict[str, Any] = json.loads(message)
+            parsed_message = message_adapter.validate_json(
+                message, context={"allow_defaults": False}
+            )
             self.authenticate(parsed_message)
-            if parsed_message.get("@type") in self.callbacks:
-                await self.callbacks[parsed_message["@type"]](parsed_message)
+            callback = self.callbacks.get(parsed_message.type)
+            if callback:
+                await callback(parsed_message)
         except Exception:
             log.exception("message-processing-failed", message=message)
 
-    def authenticate(self, message: dict[str, Any]) -> None:
+    def authenticate(self, message: Message) -> None:
         """Authenticate whether this message has originated from the advertised
         principal.
 
         """
-        advertised_principal = message["@principal"]
+        advertised_principal = message.principal
         assert advertised_principal == "@directory"
 
-        expiry = datetime.datetime.fromisoformat(message["@expiry"])
-        # Only accept messages that are not expired
-        if expiry < datetime.datetime.now(datetime.UTC):
-            raise MessageTooOldError(
-                f"message too old (expired at {message['@expiry']})"
-            )
+        self.known_messages.check(message.id)
+        message.authenticate(self.secret.encode("ascii"))
 
-        self.known_messages.check(message["@id"])
-
-        check_message = copy.deepcopy(message)
-        advertised_signature = check_message["@signature"].pop("signature")
-
-        signature = hmac.new(
-            self.secret.encode("ascii"),
-            rfc8785.dumps(check_message),
-            hashlib.sha256,
-        ).hexdigest()
-
-        if signature != advertised_signature:
-            raise InvalidSignatureError(
-                f"signature mismatch {signature} != {advertised_signature}"
-            )
         # Once the message is authenticated, store the ID.
         # This prevents a DOS attack enumerating IDs
-        self.known_messages.mark(message["@id"])
+        self.known_messages.mark(message.id)
 
-    def sign_message(self, message: dict[str, Any]) -> None:
-        message["@signature"] = {"alg": "HS256"}
-        signature = hmac.new(
-            self.secret.encode("ascii"), rfc8785.dumps(message), hashlib.sha256
-        ).hexdigest()
-        message["@signature"]["signature"] = signature
-        log.debug(
-            "signing-message",
-            type=message.get("@type"),
-            id=message.get("@id"),
-            signature=signature,
-        )
+    def sign_message(self, message: Message) -> None:
+        message.sign(self.secret.encode("ascii"))
 
-    def prepare_message(self, message: dict[str, Any]) -> str:
-        now = utils.now()
-        id_ = uuid.uuid4().hex
-        log.debug("prepare-message", type=message.get("@type"), id=id_)
-        message_template = {
-            "@context": "https://flyingcircus.io/ns/aramaki",
-            "@version": 1,
-            "@principal": self.principal,
-            "@application": self.application,
-            "@issued": now.isoformat(),
-            "@expiry": (now + datetime.timedelta(hours=1)).isoformat(),
-            "@id": id_,
-        }
-        message = copy.deepcopy(message)
-        message.update(message_template)
-        self.sign_message(message)
-        return json.dumps(message)
-
-    async def send_message(self, type: str, message: dict[str, Any]) -> None:
+    async def send_message(self, message: Message) -> None:
         # TODO: backoff, retry
         # TODO: consider adding (persistent?) buffering
-        log.debug("sending-message", status="wait", type=type)
+        log.debug("sending-message", status="wait", type=message.type)
         await self.websocket_ready.wait()
-        prepared_message = self.prepare_message(message | {"@type": type})
+        self.sign_message(message)
         assert self.websocket is not None
-        await self.websocket.send(prepared_message)
-        log.debug("sending-message", status="sent", type=type)
+        await self.websocket.send(message.model_dump_json())
+        log.debug("sending-message", status="sent", type=message.type)
+
 
 class ClientWithState(Client):
     def __init__(
@@ -260,10 +209,9 @@ class ClientWithState(Client):
         application: str,
         url: str,
         secret: str,
-        db_session_manager: DBSessionManager
+        db_session_manager: DBSessionManager,
     ):
-        super().__init__(principal=principal, application=application, url=url, secret=secret)
+        super().__init__(
+            principal=principal, application=application, url=url, secret=secret
+        )
         self.db = db_session_manager
-    
-    
-

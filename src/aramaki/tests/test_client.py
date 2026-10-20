@@ -1,4 +1,3 @@
-from aramaki.db import DBSessionManager, SqliteDBSessionManager
 import asyncio
 import datetime
 import json
@@ -6,6 +5,7 @@ import time
 import unittest.mock
 import uuid
 from collections.abc import AsyncGenerator, Generator
+from ipaddress import summarize_address_range
 from pathlib import Path
 from typing import Any
 
@@ -14,35 +14,17 @@ import websockets
 
 from aramaki.client import (
     Client,
-    InvalidSignatureError,
+    ClientWithState,
     MessageReplaySet,
-    MessageTooOldError, ClientWithState,
+)
+from aramaki.db import DBSessionManager, SqliteDBSessionManager
+from aramaki.message import (
+    InvalidSignatureError,
+    Message,
+    MessageSignature,
+    MessageTooOldError,
 )
 from aramaki.typing import JSONObject
-
-
-@pytest.fixture
-def now(
-    monkeypatch: pytest.MonkeyPatch,
-) -> Generator[unittest.mock.Mock]:
-    now = unittest.mock.Mock()
-    now.return_value = 0
-
-    class MockedDateTime(datetime.datetime):
-        @classmethod
-        def now(cls, tz: datetime.tzinfo | None = None) -> "MockedDateTime":
-            return cls.fromtimestamp(now.return_value, tz)
-
-    monkeypatch.setattr(time, "time", now)
-    monkeypatch.setattr(datetime, "datetime", MockedDateTime)
-    yield now
-
-
-def test_now_mock(now: unittest.mock.Mock):
-    assert time.time() == 0
-    assert (
-        datetime.datetime.now(datetime.UTC).isoformat() == "1970-01-01T00:00:00+00:00"
-    )
 
 
 def test_message_replay_set(now: unittest.mock.Mock):
@@ -119,43 +101,45 @@ async def test_client_authenticate(now: unittest.mock.Mock):
 
     # Start assembling a message until we pass it. This needs
     # 1. A proper principal
-    message: JSONObject = {"@principal": "foobar"}
+    message = Message(
+        application="test",
+        principal="foobar",
+        type="message",
+        expiry=datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+    )
     with pytest.raises(AssertionError):
         client.authenticate(message)
 
-    message["@principal"] = "@directory"
+    message.principal = "@directory"
 
     # 2. A non-outdated expiry
-    message["@expiry"] = (
-        datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
-    ).isoformat()
+    message.expiry = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
+
     with pytest.raises(MessageTooOldError) as e:
         client.authenticate(message)
     assert "message too old" in e.value.args[0]
 
-    message["@expiry"] = (
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
-    ).isoformat()
+    message.expiry = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
 
     # 3. An unknown ID
-    message["@id"] = "unknown message"
+    message.id = "unknown message"
     # 3. And a proper signature
-    message["@signature"] = {"signature": "asdf"}
+    message.signature.signature = "asdf"
     with pytest.raises(InvalidSignatureError):
         client.authenticate(message)
 
-    message["@signature"] = {
-        "alg": "HS256",
-        "signature": "4e864a961345d3080666c434ff466e7394280f64ba53d6e2ae52da47d836c4c5",
-    }
+    message.signature = MessageSignature(
+        alg="HS256",
+        signature="4ea1e0448c1b9d07b3ae6226972e8d0dcd699211066ee84b7472ad0e4e905e83",
+    )
     client.authenticate(message)
 
-    del message["@signature"]
+    message.signature.signature = None
     client.sign_message(message)
-    assert message["@signature"] == {
-        "alg": "HS256",
-        "signature": "4e864a961345d3080666c434ff466e7394280f64ba53d6e2ae52da47d836c4c5",
-    }
+    assert message.signature == MessageSignature(
+        alg="HS256",
+        signature="4ea1e0448c1b9d07b3ae6226972e8d0dcd699211066ee84b7472ad0e4e905e83",
+    )
 
 
 async def test_client_stop_start():
@@ -171,33 +155,6 @@ async def test_client_with_state_stop_start(tmp_path: Path):
     client.stop()
 
 
-async def test_client_prepare_message(
-    now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
-):
-    client = Client("host1", "app", "dummy", "asdf")
-
-    m_uuid = unittest.mock.Mock()
-    m_uuid().hex = "64473ce93de046988f93a3feb6e11914"
-    monkeypatch.setattr(uuid, "uuid4", m_uuid)
-    message = client.prepare_message({"key": "value"})
-
-    message = json.loads(message)
-    assert message == {
-        "key": "value",
-        "@context": "https://flyingcircus.io/ns/aramaki",
-        "@version": 1,
-        "@principal": "host1",
-        "@application": "app",
-        "@issued": "1970-01-01T00:00:00+00:00",
-        "@expiry": "1970-01-01T01:00:00+00:00",
-        "@id": "64473ce93de046988f93a3feb6e11914",
-        "@signature": {
-            "alg": "HS256",
-            "signature": "48a5dceadf3593a2db2ef97c60bbe05546b357ca07a762c873f5f516210e5443",
-        },
-    }
-
-
 async def test_client_process_message(
     now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
 ):
@@ -205,28 +162,23 @@ async def test_client_process_message(
 
     seen_messages: list[JSONObject] = []
 
-    async def handle_message(message: JSONObject) -> None:
-        seen_messages.append(message)
+    async def handle_message(message: Message) -> None:
+        seen_messages.append(message.model_dump(mode="json"))
 
     client.register_message_handler("message", handle_message)
-    message: JSONObject = {
-        "key": "value",
-        "@type": "message",
-        "@context": "https://flyingcircus.io/ns/aramaki",
-        "@version": 1,
-        "@principal": "@directory",
-        "@application": "app",
-        "@issued": "1970-01-01T00:00:00+00:00",
-        "@expiry": "1970-01-01T01:00:00+00:00",
-        "@id": "64473ce93de046988f93a3feb6e11914",
-        "@signature": {
-            "alg": "HS256",
-            "signature": "071020c8662b940949ee6c76bca47a8c81c53eda526d0139196e0fb98c8b2f9d",
-        },
-    }
+    message = Message(
+        key="value",
+        type="message",
+        context="https://flyingcircus.io/ns/aramaki",
+        version=1,
+        principal="@directory",
+        application="app",
+        issued=datetime.datetime.fromtimestamp(0, datetime.UTC),
+        id="64473ce93de046988f93a3feb6e11914",
+    )
     client.sign_message(message)
 
-    await client.process(json.dumps(message))
+    await client.process(message.model_dump_json())
 
     assert len(seen_messages) == 1
     assert seen_messages[0] == {
@@ -246,12 +198,12 @@ async def test_client_process_message(
     }
 
 
-async def test_client_process_with_missing_or_unknown_type_ignored(
+async def test_client_process_with_unknown_type_ignored(
     now: unittest.mock.Mock, monkeypatch: pytest.MonkeyPatch
 ):
     client = Client("host1", "app", "dummy", "asdf")
 
-    message: JSONObject = {
+    message = {
         "key": "value",
         "@context": "https://flyingcircus.io/ns/aramaki",
         "@version": 1,
@@ -263,16 +215,9 @@ async def test_client_process_with_missing_or_unknown_type_ignored(
         "@id": "64473ce93de046988f93a3feb6e11914",
         "@signature": {
             "alg": "HS256",
-            "signature": "071020c8662b940949ee6c76bca47a8c81c53eda526d0139196e0fb98c8b2f9d",
+            "signature": "10ae4b3a76a1552a6ec00961013f5b15e97d981c14161241d056c7e83c517a5c",
         },
     }
-    client.sign_message(message)
-    await client.process(json.dumps(message))
-
-    del message["@type"]
-    assert isinstance(message["@id"], str)
-    message["@id"] += "a"  # make a new id
-    client.sign_message(message)
     await client.process(json.dumps(message))
 
 
@@ -305,7 +250,7 @@ async def test_client_run_loop(
     monkeypatch.setattr(websockets, "connect", connect)
 
     async def receive_messages(self: Any) -> AsyncGenerator[bytes]:
-        yield b'{"@type": "message", "@principal": "@directory", "@expiry": "1970-01-01T01:00:00+00:00", "@id": "id", "@signature": {"alg": "HS256", "signature": "11c4cc460685c85ac035f3aed98c96ff7a39b6036fa9c81a701ad9c3a3433d76"}}'
+        yield b'{"@context": "https://flyingcircus.io/ns/aramaki", "@version": 1, "@type": "message", "@principal": "@directory", "@issued": "1970-01-01T01:00:00+00:00", "@expiry": "1970-01-01T01:00:00+00:00", "@id": "id", "@signature": {"alg": "HS256", "signature": "e1a2a6f6541baf9add825106f36c470141333106235e9acff801cea87ccc079c"}}'
         await asyncio.sleep(10000)
 
     websocket.__aiter__ = receive_messages
@@ -319,15 +264,15 @@ async def test_client_run_loop(
 
     seen_messages: list[JSONObject] = []
 
-    async def handle_message(message: JSONObject) -> None:
-        seen_messages.append(message)
+    async def handle_message(message: Message) -> None:
+        seen_messages.append(message.model_dump(mode="json"))
 
     client.register_message_handler("message", handle_message)
     await client.websocket_ready.wait()
 
     assert websocket.send.call_args_list == [
         unittest.mock.call(
-            '{"@type": "aramaki.subscription", "@application": "app", "matches": [{"@type": "message", "scope": {}}], "@context": "https://flyingcircus.io/ns/aramaki", "@version": 1, "@principal": "host1", "@issued": "1970-01-01T00:00:00+00:00", "@expiry": "1970-01-01T01:00:00+00:00", "@id": "64473ce93de046988f93a3feb6e11914", "@signature": {"alg": "HS256", "signature": "58262bcc08f1b6eaa4485c5e7b6da696539426178750e81db20094665ca26e1e"}}'
+            '{"@id":"64473ce93de046988f93a3feb6e11914","@type":"aramaki.subscription","@context":"https://flyingcircus.io/ns/aramaki","@version":1,"@signature":{"alg":"HS256","signature":"58262bcc08f1b6eaa4485c5e7b6da696539426178750e81db20094665ca26e1e"},"@principal":"host1","@application":"app","@issued":"1970-01-01T00:00:00+00:00","@expiry":"1970-01-01T01:00:00+00:00","matches":[{"@type":"message","scope":{}}]}'
         )
     ]
     websocket.send.call_args_list = []
@@ -337,11 +282,18 @@ async def test_client_run_loop(
 
     assert seen_messages != []
 
-    await client.send_message("foobar", {"key": "value"})
+    await client.send_message(
+        Message(
+            type="foobar",
+            principal=client.principal,
+            application=client.application,
+            key="value",
+        )
+    )
 
     calls = websocket.send.call_args_list  # pyright: ignore[reportUnknownMemberType]
     assert calls == [
         unittest.mock.call(
-            '{"key": "value", "@type": "foobar", "@context": "https://flyingcircus.io/ns/aramaki", "@version": 1, "@principal": "host1", "@application": "app", "@issued": "1970-01-01T00:00:00+00:00", "@expiry": "1970-01-01T01:00:00+00:00", "@id": "64473ce93de046988f93a3feb6e11914", "@signature": {"alg": "HS256", "signature": "5a97fe6881c6dbe8a73ba95ef63ca1dc2f9882d8494c58b2c6799b13f79e37da"}}'
+            '{"@id":"64473ce93de046988f93a3feb6e11914","@type":"foobar","@context":"https://flyingcircus.io/ns/aramaki","@version":1,"@signature":{"alg":"HS256","signature":"5a97fe6881c6dbe8a73ba95ef63ca1dc2f9882d8494c58b2c6799b13f79e37da"},"@principal":"host1","@application":"app","@issued":"1970-01-01T00:00:00+00:00","@expiry":"1970-01-01T01:00:00+00:00","key":"value"}'
         ),
     ]
