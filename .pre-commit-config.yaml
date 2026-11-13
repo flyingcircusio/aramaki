@@ -28,18 +28,11 @@ repos:
       - id: ruff-format
     repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.8
-  - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
-    rev: 1.40.1 # or whatever the latest version is at the time
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    # ty version.
+    rev: v0.0.101
     hooks:
-      - id: basedpyright
-      - id: basedpyright
-        alias: basedpyright-baseline
-        name: "basedpyright (rewrite baseline)"
-        args:
-          - "--writebaseline"
-        pass_filenames: False
-        stages:
-          - manual
+      - id: ty
   - repo: https://github.com/google/keep-sorted
     rev: v0.9.1
     hooks:

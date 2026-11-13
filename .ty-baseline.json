@@ -1,0 +1,133 @@
+{
+  "version": 0,
+  "files": {
+    "src/aramaki/client.py": [
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 62,
+        "endColumn": 66,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 62,
+        "endColumn": 66,
+        "lineCount": 1
+      }
+    ],
+    "src/aramaki/collection.py": [
+      {
+        "rule": "unsound-return-statement",
+        "startColumn": 11,
+        "endColumn": 33,
+        "lineCount": 1
+      },
+      {
+        "rule": "unresolved-attribute",
+        "startColumn": 33,
+        "endColumn": 50,
+        "lineCount": 1
+      }
+    ],
+    "src/aramaki/message.py": [
+      {
+        "rule": "invalid-mutable-override",
+        "startColumn": 4,
+        "endColumn": 8,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-mutable-override",
+        "startColumn": 4,
+        "endColumn": 8,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-mutable-override",
+        "startColumn": 4,
+        "endColumn": 8,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-mutable-override",
+        "startColumn": 4,
+        "endColumn": 8,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-mutable-override",
+        "startColumn": 4,
+        "endColumn": 8,
+        "lineCount": 1
+      }
+    ],
+    "src/aramaki/tests/test_collection.py": [
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      },
+      {
+        "rule": "invalid-argument-type",
+        "startColumn": 8,
+        "endColumn": 23,
+        "lineCount": 1
+      }
+    ]
+  }
+}
